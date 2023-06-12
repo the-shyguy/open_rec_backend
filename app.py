@@ -1,15 +1,21 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 import pandas as pd
 import pickle
 
 app = Flask(__name__)
 app.debug = True
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 @app.route('/')
+@cross_origin()
 def hello():
     return '<h1>Hello, World!</h1>'
 
 @app.route('/repo_list', methods=['POST'])
+@cross_origin()
 def repo_list():
     res = request.get_json()
     if res is None:
@@ -45,6 +51,7 @@ def repo_list():
     return {"repo_list":repo_list_full_data, "code": 200}
 
 @app.route('/item_list', methods=['POST'])
+@cross_origin()
 def item_list():
     res = request.get_json()
     if res is None:
@@ -63,9 +70,10 @@ def item_list():
     return jsonify({"item_list":item_dict, "code": 200})
 
 @app.route('/random_repos', methods=['GET'])
+@cross_origin()
 def random_repos():
     new_df = pd.read_csv('repo_database/fractioned_shuffled_data.csv')
-    random_repo_names = new_df[['account_name','repository_name']].sample(n=10)
+    random_repo_names = new_df[['account_name','repository_name']].sample(n=6)
     random_repo_names = [tuple(row) for row in random_repo_names.values]
     cleaned_data = pd.read_csv('repo_database/cleaned_data.csv')
     repo_list_full_data = []
