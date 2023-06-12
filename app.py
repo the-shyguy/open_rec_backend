@@ -69,16 +69,19 @@ def item_list():
     
     return jsonify({"item_list":item_dict, "code": 200})
 
-@app.route('/random_repos', methods=['GET'])
+@app.route('/random_repos', methods=['POST'])
 @cross_origin()
 def random_repos():
+    res = request.get_json()
+    random_selected_items = res['data']
     new_df = pd.read_csv('repo_database/fractioned_shuffled_data.csv')
-    random_repo_names = new_df[['account_name','repository_name']].sample(n=6)
+    new_df = new_df[new_df['concatenated_tags'].str.split().apply(lambda x: any(tag in x for tag in random_selected_items))]
+    random_repo_names = new_df[['account_name','repository_name']].sample(n=9)
     random_repo_names = [tuple(row) for row in random_repo_names.values]
     cleaned_data = pd.read_csv('repo_database/cleaned_data.csv')
     repo_list_full_data = []
     for i in random_repo_names:
         filtered_data = cleaned_data.loc[(cleaned_data['repository_name']==i[1]) & (cleaned_data['account_name']==i[0])]
         repo_list_full_data.append({'account_name':filtered_data['account_name'].values[0],'repository_name':filtered_data['repository_name'].values[0],'tags':filtered_data['tags'].values[0],'languages':filtered_data['languages'].values[0],'link':filtered_data['link'].values[0],'issues':f"{filtered_data['issues'].values[0]}",'pull_requests':f"{filtered_data['pull_requests'].values[0]}",'forks':f"{filtered_data['forks'].values[0]}",'stars':f"{filtered_data['stars'].values[0]}",'contributors':f"{filtered_data['contributors'].values[0]}"})
-    return jsonify({"repo_list":repo_list_full_data, "code": 200})
+    return {'random_repo_list':repo_list_full_data}
 
